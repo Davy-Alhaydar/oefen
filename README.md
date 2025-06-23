@@ -112,6 +112,12 @@ class ProductController extends AbstractController
 }
 
 
+
+
+
+Variable "controller_name" does not exist in product/index.html.twig at line 12.
+
+
             
 
 
