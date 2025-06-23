@@ -85,50 +85,31 @@ class ProductController extends AbstractController
 
 
 
-
+goede
 
 <?php
 
 namespace App\Controller;
 
+use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-
-final class ProductController extends AbstractController
-{
-    #[Route('/product', name: 'app_product')]
-    public function index(): Response
-    {
-        return $this->render('product/index.html.twig', [
-            'controller_name' => 'ProductController',
-        ]);
-    }
-
-    // src/Controller/ProductController.php
-
-namespace App\Controller;
-
-    use App\Repository\ProductRepository;
-    use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-    use Symfony\Component\HttpFoundation\Response;
-    use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractController
 {
     #[Route('/producten', name: 'product_index')]
     public function index(ProductRepository $productRepository): Response
     {
-        // Haal alle producten op
+        // Haal alle producten op uit de database
         $producten = $productRepository->findAll();
 
-        // Stuur naar Twig
+        // Geef de producten door aan de Twig-template
         return $this->render('product/index.html.twig', [
             'producten' => $producten,
         ]);
     }
 }
-
 
 
             
