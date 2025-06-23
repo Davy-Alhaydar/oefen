@@ -1,81 +1,26 @@
 # oefen
 
 
-// src/Controller/HomeController.php
+// src/Controller/ProductController.php
 
 namespace App\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-
-class HomeController extends AbstractController
-{
-    #[Route('/', name: 'app_home')]
-    public function index(): Response
-    {
-        // Haal de ingelogde gebruiker op
-        $currentUser = $this->getUser();
-
-        if ($currentUser) {
-            // De gebruiker is ingelogd
-            $username = $currentUser->getUserIdentifier(); // of getUsername(), afhankelijk van je User entity
-            // Bijvoorbeeld: dump($username); of geef het door aan Twig
-        } else {
-            // De gebruiker is NIET ingelogd
-            // Misschien wil je hier redirecten of een melding geven
-        }
-
-        return $this->render('home/index.html.twig', [
-            'user' => $currentUser
-        ]);
-    }
-}
-
-
-
-
-{% if user %}
-    Welkom, {{ user.userIdentifier }}
-{% else %}
-    Je bent niet ingelogd.
-{% endif %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-// src/Controller/ProductController.php
-
-use App\Entity\Product;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractController
 {
-    #[Route('/product/{id}', name: 'product_show')]
-    public function show(int $id, EntityManagerInterface $em): Response
+    #[Route('/producten', name: 'product_index')]
+    public function index(ProductRepository $productRepository): Response
     {
-        // Haal het product op uit de database
-        $product = $em->getRepository(Product::class)->find($id);
+        // Haal alle producten op
+        $producten = $productRepository->findAll();
 
-        if (!$product) {
-            throw $this->createNotFoundException('Product niet gevonden');
-        }
-
-        // Geef het door aan Twig
-        return $this->render('product/show.html.twig', [
-            'product' => $product
+        // Stuur naar Twig
+        return $this->render('product/index.html.twig', [
+            'producten' => $producten,
         ]);
     }
 }
@@ -86,13 +31,67 @@ class ProductController extends AbstractController
 
 
 
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Producten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        .product {
+            background-color: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .prijs {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Alle Producten</h1>
+
+{% if producten is empty %}
+    <p>Er zijn nog geen producten beschikbaar.</p>
+{% else %}
+    {% for product in producten %}
+        <div class="product">
+            <h2>{{ product.description }}</h2>
+            <p class="prijs">Prijs: €{{ product.prijs }}</p>
+        </div>
+    {% endfor %}
+{% endif %}
+
+</body>
+</html>
 
 
 
 
 
-{# templates/product/show.html.twig #}
 
-<h1>{{ product.name }}</h1>
-<p>Prijs: €{{ product.prijs }}</p>
-<p>Beschrijving: {{ product.omschrijving }}</p>
+
+
+
+
+
+
+#[Route('/producten', name: 'product_index')]
+
+
+
+            
+
+
+
