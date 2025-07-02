@@ -185,3 +185,82 @@ class StudentController extends AbstractController
 {% endblock %}
 
 
+
+
+
+
+
+
+!!!!! StudentController.php !!!!!!
+
+Edit(bewerken)
+
+#[Route('/student/{id}/edit', name: 'app_student_edit')]
+public function edit(Request $request, EntityManagerInterface $em, Student $student): Response
+{
+    // Form aanmaken
+    $form = $this->createForm(StudentType::class, $student);
+
+    // Request data verwerken
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $em->flush();
+
+        // Na opslaan, terug naar overzicht
+        return $this->redirectToRoute('app_student_index');
+    }
+
+    return $this->render('student/edit.html.twig', [
+        'form' => $form->createView(),
+        'student' => $student,
+    ]);
+}
+
+
+delete
+
+#[Route('/student/{id}/delete', name: 'app_student_delete', methods: ['POST'])]
+public function delete(Request $request, EntityManagerInterface $em, Student $student): Response
+{
+    if ($this->isCsrfTokenValid('delete'.$student->getId(), $request->request->get('_token'))) {
+        $em->remove($student);
+        $em->flush();
+    }
+
+    return $this->redirectToRoute('app_student_index');
+}
+
+
+studentType form maken
+
+php bin/console make:form StudentType
+
+
+!!!!! templates/student/edit.html.twig !!!!!!!
+
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Student bewerken</h1>
+
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button class="btn btn-primary">Opslaan</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('app_student_index') }}">Terug naar overzicht</a>
+{% endblock %}
+
+
+
+!!!!!! templates/student/index.html.twig !!!!!!!
+
+<td>
+    <a class="btn btn-outline-secondary" href="{{ path('app_student_edit', {'id': student.id}) }}">Bewerk</a>
+
+    <form method="post" action="{{ path('app_student_delete', {'id': student.id}) }}" style="display:inline-block" onsubmit="return confirm('Weet je het zeker?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ student.id) }}">
+        <button class="btn btn-outline-danger">Verwijder</button>
+    </form>
+</td>
