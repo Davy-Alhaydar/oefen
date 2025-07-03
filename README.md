@@ -1,266 +1,351 @@
 # oefen
-https://github.com/NorbuBustinduyMarin/dd
-
-!!!!! SchoolGroupController.php !!!!!
-
-<?php
-
-namespace App\Controller;
-
-use App\Entity\SchoolGroup;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
-
-class SchoolGroupController extends AbstractController
-{
-    #[Route('/', name: 'app_school_group')]
-    public function index(): Response
-    {
-        return $this->render('school_group/index.html.twig');
-    }
-
-    #[Route('/school_group', name: 'app_school_group_show')]
-    public function show(EntityManagerInterface $entityManager): Response
-    {
-        $schoolGroups = $entityManager->getRepository(SchoolGroup::class)->findAll();
-
-        return $this->render('school_group/show.html.twig', [
-            'school_groups' => $schoolGroups
-        ]);
-    }
-
-    #[Route('/school_group/{id}', name: 'app_school_group_detail')]
-    public function detail(SchoolGroup $schoolGroup): Response
-    {
-        return $this->render('school_group/students.html.twig', [
-            'schoolGroup' => $schoolGroup,
-            'students' => $schoolGroup->getStudents(),
-        ]);
-    }
-
-}
 
 
-
-
-!!!!! StudentController.php !!!!!!
+!!!!!! index.php !!!!!!
 
 <?php
+// Verbinding maken met database
+$conn = new mysqli("localhost", "root", "", "cars4u");
 
-namespace App\Controller;
-
-use App\Entity\Student;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-
-class StudentController extends AbstractController
-{
-    #[Route('/student', name: 'app_student')]
-    public function index(EntityManagerInterface $entityManager): Response
-    {
-        $students = $entityManager->getRepository(Student::class)->findAll();
-        return $this->render('student/index.html.twig', [
-            'students' => $students,
-        ]);
-    }
-
-    #[Route('/student/{id}', name: 'app_show_student')]
-    public function showStudent(EntityManagerInterface $entityManager, int $id): Response
-    {
-        $student = $entityManager->getRepository(Student::class)->find($id);
-        return $this->render('student/show-student.html.twig', [
-            'student' => $student,
-        ]);
-    }
+// Check verbinding
+if ($conn->connect_error) {
+    die("Verbinding mislukt: " . $conn->connect_error);
 }
 
+// Haal gegevens op
+$sql = "SELECT * FROM cars";
+$result = $conn->query($sql);
+?>
 
-!!!!! school_group/index.html.twig !!!!!!!
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Overzicht</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4">Auto Overzicht</h1>
 
-{% extends 'base.html.twig' %}
+    <a href="insert.php" class="btn btn-primary mb-3">Nieuwe auto toevoegen</a>
 
-{% block body %}
-<!-- Masthead Avatar Image-->
-<img class="masthead-avatar mb-5" src="{{ asset('/images/avataaars.svg') }}" alt="Heppie Kamper" />
-<!-- Masthead Heading-->
-<h1 class="masthead-heading text-uppercase mb-0">
-    School de Heppie Kemper
-</h1>
-<!-- Icon Divider-->
-<div class="divider-custom divider-light">
-    <div class="divider-custom-line"></div>
-    <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
-    <div class="divider-custom-line"></div>
-</div>
-<!-- Masthead Subheading-->
-<p class="masthead-subheading font-weight-light mb-0">
-    Software Developer - IT Systems and Devices - Medewerker ICT Support
-</p>
-{% endblock %}
-
-
-
-
-
-
-
-!!!!!! school_group/show.html.twig !!!!!!!
-
-{% extends 'base.html.twig' %}
-
-{% block body %}
-<h1 class="masthead-heading text-uppercase mb-0">
-    Klassen overzicht
-</h1>
-<table class="table table-hover table-striped">
-    <thead>
-    <tr>
-        <th>Naam</th>
-        <th>Jaar</th>
-        <th>SLB'er</th>
-        <th>Klas tonen</th>
-
-    </tr>
-    </thead>
-    <tbody>
-        {% for group in school_groups %}
-            <tr>
-
-<td>
-{{ group.name }}
-</td>
-
-                <td>{{ group.year }}</td>
-                <td>{{ group.teacher }}</td>
-                <td>
-                    <a href="{{ path('app_school_group_detail', { id: group.id }) }}" class="btn text-primary-emphasis">
-                        Toon studenten
-                    </a>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
-
-
-
-
-
-!!!!!! school_group/students.html.twig   zelf aanmaken !!!!!!!
-
-{% extends 'base.html.twig' %}
-
-{% block body %}
-    <h1>Studenten in klas {{ schoolGroup.name }}</h1>
-
-    <table class="table table-striped">
-        <thead>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
         <tr>
-            <th>Voornaam</th>
-            <th>Achternaam</th>
-            <th>Email</th>
+            <th>Merk</th>
+            <th>Type</th>
+            <th>Kilometerstand</th>
+            <th>Kleur</th>
+            <th>Prijs</th>
+            <th>Acties</th>
         </tr>
         </thead>
         <tbody>
-        {% for student in students %}
-            <tr>
-                <td>{{ student.firstName }}</td>
-                <td>{{ student.lastName }}</td>
-                <td>{{ student.email }}</td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="3">Geen studenten in deze klas.</td>
-            </tr>
-        {% endfor %}
+        <?php if ($result && $result->num_rows > 0): ?>
+            <?php while($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?= htmlspecialchars($row["merk"]) ?></td>
+                    <td><?= htmlspecialchars($row["type"]) ?></td>
+                    <td><?= htmlspecialchars($row["kilometerstand"]) ?></td>
+                    <td><?= htmlspecialchars($row["kleur"]) ?></td>
+                    <td>€ <?= htmlspecialchars(number_format($row["prijs"], 2, ',', '.')) ?></td>
+                    <td>
+                        <a href="update.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Update</a>
+                        <a href="delete.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <tr><td colspan="6" class="text-center">Geen auto's gevonden.</td></tr>
+        <?php endif; ?>
         </tbody>
     </table>
-
-    <a href="{{ path('app_school_group_show') }}">← Terug naar klassenoverzicht</a>
-{% endblock %}
-
-
+</div>
+</body>
+</html>
 
 
 
 
 
 
-!!!!! StudentController.php !!!!!!
 
-Edit(bewerken)
+!!!!! insert.php !!!!!
 
-#[Route('/student/{id}/edit', name: 'app_student_edit')]
-public function edit(Request $request, EntityManagerInterface $em, Student $student): Response
-{
-    // Form aanmaken
-    $form = $this->createForm(StudentType::class, $student);
+<?php
+$errors = [];
+$values = [
+    'merk' => '',
+    'type' => '',
+    'kilometerstand' => '',
+    'kleur' => '',
+    'prijs' => ''
+];
 
-    // Request data verwerken
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $em->flush();
-
-        // Na opslaan, terug naar overzicht
-        return $this->redirectToRoute('app_student_index');
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    foreach ($values as $key => $val) {
+        $values[$key] = trim($_POST[$key] ?? '');
     }
 
-    return $this->render('student/edit.html.twig', [
-        'form' => $form->createView(),
-        'student' => $student,
-    ]);
-}
-
-
-delete
-
-#[Route('/student/{id}/delete', name: 'app_student_delete', methods: ['POST'])]
-public function delete(Request $request, EntityManagerInterface $em, Student $student): Response
-{
-    if ($this->isCsrfTokenValid('delete'.$student->getId(), $request->request->get('_token'))) {
-        $em->remove($student);
-        $em->flush();
+    // Validatie
+    if ($values['merk'] == '') {
+        $errors['merk'] = "Merk is verplicht.";
     }
 
-    return $this->redirectToRoute('app_student_index');
+    if ($values['type'] == '') {
+        $errors['type'] = "Type is verplicht.";
+    }
+
+    if (!ctype_digit($values['kilometerstand'])) {
+        $errors['kilometerstand'] = "Kilometerstand moet een geheel getal zijn.";
+    }
+
+    if ($values['kleur'] == '') {
+        $errors['kleur'] = "Kleur is verplicht.";
+    }
+
+    if (!is_numeric($values['prijs'])) {
+        $errors['prijs'] = "Prijs moet een getal zijn.";
+    }
+
+    // Als geen fouten → opslaan
+    if (empty($errors)) {
+        $conn = new mysqli("localhost", "root", "", "cars4u");
+
+        if ($conn->connect_error) {
+            die("Verbinding mislukt: " . $conn->connect_error);
+        }
+
+        $stmt = $conn->prepare("INSERT INTO cars (merk, type, kilometerstand, kleur, prijs) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssisd", $values['merk'], $values['type'], $values['kilometerstand'], $values['kleur'], $values['prijs']);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        header("Location: index.php");
+        exit;
+    }
 }
+?>
 
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Nieuwe Auto Toevoegen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4">Nieuwe Auto Toevoegen</h1>
+    <form method="post">
+        <?php
+        function field($name, $label, $type = 'text') {
+            global $values, $errors;
+            $error = $errors[$name] ?? '';
+            $value = htmlspecialchars($values[$name]);
+            $class = $error ? 'is-invalid' : '';
+            echo "
+                <div class='mb-3'>
+                    <label for='$name' class='form-label'>$label</label>
+                    <input type='$type' class='form-control $class' id='$name' name='$name' value='$value'>
+                    <div class='invalid-feedback'>$error</div>
+                </div>
+            ";
+        }
 
-studentType form maken
-
-php bin/console make:form StudentType
-
-
-!!!!! templates/student/edit.html.twig !!!!!!!
-
-{% extends 'base.html.twig' %}
-
-{% block body %}
-    <h1>Student bewerken</h1>
-
-    {{ form_start(form) }}
-        {{ form_widget(form) }}
-        <button class="btn btn-primary">Opslaan</button>
-    {{ form_end(form) }}
-
-    <a href="{{ path('app_student_index') }}">Terug naar overzicht</a>
-{% endblock %}
-
-
-
-!!!!!! templates/student/index.html.twig !!!!!!!
-
-<td>
-    <a class="btn btn-outline-secondary" href="{{ path('app_student_edit', {'id': student.id}) }}">Bewerk</a>
-
-    <form method="post" action="{{ path('app_student_delete', {'id': student.id}) }}" style="display:inline-block" onsubmit="return confirm('Weet je het zeker?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ student.id) }}">
-        <button class="btn btn-outline-danger">Verwijder</button>
+        field('merk', 'Merk');
+        field('type', 'Type');
+        field('kilometerstand', 'Kilometerstand');
+        field('kleur', 'Kleur');
+        field('prijs', 'Prijs (bijv. 12345.67)');
+        ?>
+        <button type="submit" class="btn btn-success">Toevoegen</button>
+        <a href="index.php" class="btn btn-secondary">Terug</a>
     </form>
-</td>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+!!!!! update.php !!!!!!
+
+<?php
+$conn = new mysqli("localhost", "root", "", "cars4u");
+if ($conn->connect_error) {
+    die("Verbinding mislukt: " . $conn->connect_error);
+}
+
+$errors = [];
+$values = [
+    'merk' => '',
+    'type' => '',
+    'kilometerstand' => '',
+    'kleur' => '',
+    'prijs' => ''
+];
+
+// ID ophalen
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id <= 0) {
+    die("Ongeldige ID.");
+}
+
+// Als formulier is verstuurd (POST)
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    foreach ($values as $key => $val) {
+        $values[$key] = trim($_POST[$key] ?? '');
+    }
+
+    // Validatie
+    if ($values['merk'] == '') $errors['merk'] = "Merk is verplicht.";
+    if ($values['type'] == '') $errors['type'] = "Type is verplicht.";
+    if (!ctype_digit($values['kilometerstand'])) $errors['kilometerstand'] = "Moet een geheel getal zijn.";
+    if ($values['kleur'] == '') $errors['kleur'] = "Kleur is verplicht.";
+    if (!is_numeric($values['prijs'])) $errors['prijs'] = "Prijs moet een getal zijn.";
+
+    // Als geen fouten → updaten
+    if (empty($errors)) {
+        $stmt = $conn->prepare("UPDATE cars SET merk=?, type=?, kilometerstand=?, kleur=?, prijs=? WHERE id=?");
+        $stmt->bind_param("ssisdi", $values['merk'], $values['type'], $values['kilometerstand'], $values['kleur'], $values['prijs'], $id);
+        $stmt->execute();
+        $stmt->close();
+        $conn->close();
+
+        header("Location: index.php");
+        exit;
+    }
+} else {
+    // Ophalen bestaande gegevens (GET)
+    $stmt = $conn->prepare("SELECT * FROM cars WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        foreach ($values as $key => $_) {
+            $values[$key] = $row[$key];
+        }
+    } else {
+        die("Auto niet gevonden.");
+    }
+    $stmt->close();
+}
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Aanpassen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4">Auto Aanpassen</h1>
+    <form method="post">
+        <?php
+        function field($name, $label, $type = 'text') {
+            global $values, $errors;
+            $error = $errors[$name] ?? '';
+            $value = htmlspecialchars($values[$name]);
+            $class = $error ? 'is-invalid' : '';
+            echo "
+                <div class='mb-3'>
+                    <label for='$name' class='form-label'>$label</label>
+                    <input type='$type' class='form-control $class' id='$name' name='$name' value='$value'>
+                    <div class='invalid-feedback'>$error</div>
+                </div>
+            ";
+        }
+
+        field('merk', 'Merk');
+        field('type', 'Type');
+        field('kilometerstand', 'Kilometerstand');
+        field('kleur', 'Kleur');
+        field('prijs', 'Prijs (bijv. 12345.67)');
+        ?>
+        <button type="submit" class="btn btn-primary">Opslaan</button>
+        <a href="index.php" class="btn btn-secondary">Annuleren</a>
+    </form>
+</div>
+</body>
+</html>
+
+
+
+
+
+!!!!! delete.php !!!!!!
+
+<?php
+$conn = new mysqli("localhost", "root", "", "cars4u");
+if ($conn->connect_error) {
+    die("Verbinding mislukt: " . $conn->connect_error);
+}
+
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+if ($id <= 0) {
+    die("Ongeldige ID.");
+}
+
+// Verwijderen bij bevestiging
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['bevestig'])) {
+        $stmt = $conn->prepare("DELETE FROM cars WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->close();
+    }
+    $conn->close();
+    header("Location: index.php");
+    exit;
+}
+
+// Gegevens ophalen voor bevestiging
+$stmt = $conn->prepare("SELECT * FROM cars WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$car = $result->fetch_assoc();
+$stmt->close();
+
+if (!$car) {
+    die("Auto niet gevonden.");
+}
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Verwijderen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4 text-danger">Auto Verwijderen</h1>
+    <p>Weet je zeker dat je deze auto wilt verwijderen?</p>
+    <ul>
+        <li><strong>Merk:</strong> <?= htmlspecialchars($car['merk']) ?></li>
+        <li><strong>Type:</strong> <?= htmlspecialchars($car['type']) ?></li>
+        <li><strong>Kilometerstand:</strong> <?= htmlspecialchars($car['kilometerstand']) ?></li>
+        <li><strong>Kleur:</strong> <?= htmlspecialchars($car['kleur']) ?></li>
+        <li><strong>Prijs:</strong> € <?= htmlspecialchars(number_format($car['prijs'], 2, ',', '.')) ?></li>
+    </ul>
+
+    <form method="post" class="d-flex gap-2">
+        <button type="submit" name="bevestig" class="btn btn-danger">Ja, verwijderen</button>
+        <a href="index.php" class="btn btn-secondary">Annuleren</a>
+    </form>
+</div>
+</body>
+</html>
