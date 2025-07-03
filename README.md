@@ -1,6 +1,298 @@
 # oefen
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! laptop4u voorbeeld !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+map
+!!!!!!!! modules\database.php !!!!!!!1
+
+<?php
+$host = '127.0.0.1';
+$db   = 'laptop4u';
+$user = 'root';
+$pass = '';
+$charset = 'utf8mb4';
+
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
+];
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    throw new \PDOException($e->getMessage(), (int)$e->getCode());
+}
+
+
+
+
+
+
+
+
+
+
+!!!!!! index.php !!!!!!
+
+<?php
+require 'modules/database.php';
+
+$stmt = $pdo->query("SELECT * FROM laptops ORDER BY id DESC");
+$laptops = $stmt->fetchAll();
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Laptop4u overzicht</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h1 class="mb-4">Laptop4u - Laptops overzicht</h1>
+    <a href="insert.php" class="btn btn-primary mb-3">Nieuwe laptop toevoegen</a>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Merk</th>
+            <th>Type</th>
+            <th>Harddisk</th>
+            <th>Memory</th>
+            <th>Prijs</th>
+            <th>Acties</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($laptops as $laptop): ?>
+            <tr>
+                <td><?= $laptop['id'] ?></td>
+                <td><?= htmlspecialchars($laptop['merk']) ?></td>
+                <td><?= htmlspecialchars($laptop['type']) ?></td>
+                <td><?= htmlspecialchars($laptop['hd']) ?></td>
+                <td><?= htmlspecialchars($laptop['memory']) ?></td>
+                <td>€<?= number_format($laptop['prijs'], 2, ',', '.') ?></td>
+                <td>
+                    <a href="update.php?id=<?= $laptop['id'] ?>" class="btn btn-sm btn-warning">Wijzig</a>
+                    <a href="delete.php?id=<?= $laptop['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Weet je het zeker?')">Verwijder</a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+!!!!!! insert.php !!!!!!
+
+<?php
+require 'modules/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $merk = $_POST['merk'];
+    $type = $_POST['type'];
+    $hd = $_POST['hd'];
+    $memory = $_POST['memory'];
+    $prijs = $_POST['prijs'];
+
+    $stmt = $pdo->prepare("INSERT INTO laptops (merk, type, hd, memory, prijs) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$merk, $type, $hd, $memory, $prijs]);
+
+    header('Location: index.php');
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Laptop toevoegen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2>Laptop toevoegen</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label>Merk</label>
+            <input type="text" name="merk" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Type</label>
+            <input type="text" name="type" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Harddisk (GB)</label>
+            <input type="number" name="hd" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Memory (GB)</label>
+            <input type="number" name="memory" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Prijs (€)</label>
+            <input type="number" step="0.01" name="prijs" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success">Opslaan</button>
+        <a href="index.php" class="btn btn-secondary">Annuleren</a>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+!!!! update.php !!!!
+
+<?php
+require 'modules/database.php';
+
+$id = $_GET['id'] ?? null;
+if (!$id) {
+    header('Location: index.php');
+    exit;
+}
+
+$stmt = $pdo->prepare("SELECT * FROM laptops WHERE id = ?");
+$stmt->execute([$id]);
+$laptop = $stmt->fetch();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $merk = $_POST['merk'];
+    $type = $_POST['type'];
+    $hd = $_POST['hd'];
+    $memory = $_POST['memory'];
+    $prijs = $_POST['prijs'];
+
+    $stmt = $pdo->prepare("UPDATE laptops SET merk=?, type=?, hd=?, memory=?, prijs=? WHERE id=?");
+    $stmt->execute([$merk, $type, $hd, $memory, $prijs, $id]);
+
+    header('Location: index.php');
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Laptop wijzigen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2>Laptop wijzigen</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label>Merk</label>
+            <input type="text" name="merk" class="form-control" value="<?= htmlspecialchars($laptop['merk']) ?>" required>
+        </div>
+        <div class="mb-3">
+            <label>Type</label>
+            <input type="text" name="type" class="form-control" value="<?= htmlspecialchars($laptop['type']) ?>" required>
+        </div>
+        <div class="mb-3">
+            <label>Harddisk (GB)</label>
+            <input type="number" name="hd" class="form-control" value="<?= $laptop['hd'] ?>" required>
+        </div>
+        <div class="mb-3">
+            <label>Memory (GB)</label>
+            <input type="number" name="memory" class="form-control" value="<?= $laptop['memory'] ?>" required>
+        </div>
+        <div class="mb-3">
+            <label>Prijs (€)</label>
+            <input type="number" step="0.01" name="prijs" class="form-control" value="<?= $laptop['prijs'] ?>" required>
+        </div>
+        <button type="submit" class="btn btn-warning">Bijwerken</button>
+        <a href="index.php" class="btn btn-secondary">Annuleren</a>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+!!!!! delete.php !!!!!!!
+
+<?php
+require 'modules/database.php';
+
+$id = $_GET['id'] ?? null;
+if ($id) {
+    $stmt = $pdo->prepare("DELETE FROM laptops WHERE id = ?");
+    $stmt->execute([$id]);
+}
+
+header('Location: index.php');
+exit;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!! car4u voorbeeld !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 !!!!!! index.php !!!!!!
 
 <?php
