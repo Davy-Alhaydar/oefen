@@ -1,6 +1,102 @@
 # oefen
 
 
+
+<?php
+require 'modules/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $category = $_POST['category'];
+    $merk = $_POST['merk'];
+    $type = $_POST['type'];
+    $memory = $_POST['memory'];
+    $hd = $_POST['hd'];
+    $prijs = $_POST['prijs'];
+
+    $stmt = $pdo->prepare("INSERT INTO laptops (category, merk, type, memory, hd, prijs) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$category, $merk, $type, $memory, $hd, $prijs]);
+
+    header('Location: index.php');
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Laptop toevoegen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2>Insert laptop</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label>Category</label>
+            <input type="text" name="category" class="form-control" required>
+
+<!--            <select class="form-select" aria-label="Default select example">-->
+<!--                <option selected>Select your category</option>-->
+<!--                <option value="1">Ultrabooks</option>-->
+<!--                <option value="2">Gaming laptops</option>-->
+<!--                <option value="3">Chromebooks</option>-->
+<!--                <option value="4">2-in-1 Laptops</option>-->
+<!--                <option value="5">Zakelijke Laptops</option>-->
+<!--            </select>-->
+
+        </div>
+        <div class="mb-3">
+            <label>Merk</label>
+            <input type="text" name="merk" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Type</label>
+            <input type="text" name="type" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Memory</label>
+            <input type="number" name="memory" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>HD</label>
+            <input type="number" name="hd" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Prijs (€)</label>
+            <input type="number" step="0.01" name="prijs" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Insert</button>
+        <a href="index.php" class="btn btn-primary">Back</a>
+    </form>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! laptop4u voorbeeld !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 map
